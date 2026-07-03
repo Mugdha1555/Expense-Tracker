@@ -5,19 +5,25 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <title>Expense Tracker Dashboard</title>
+    <title>Expense Tracker</title>
 
     <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+          rel="stylesheet">
 
     <!-- CSS -->
+
     <link rel="stylesheet" href="../css/reset.css">
     <link rel="stylesheet" href="../css/variable.css">
     <link rel="stylesheet" href="../css/dashboard.css">
@@ -28,296 +34,590 @@
 
 <div class="dashboard">
 
-    <!-- ================= SIDEBAR ================= -->
+    <!-- =========================
+            SIDEBAR
+    ========================== -->
 
     <aside class="sidebar">
 
-        <div class="logo">
+        <div>
 
-            💰 ExpenseTracker
+            <div class="logo">
+
+                💰 ExpenseTracker
+
+            </div>
+
+            <ul class="menu">
+
+                <li id="dashboardBtn"
+                    class="active">
+
+                    <span>🏠</span>
+
+                    <span>Dashboard</span>
+
+                </li>
+
+                <li id="expenseBtn">
+
+                    <span>💸</span>
+
+                    <span>Expenses</span>
+
+                </li>
+
+                <li id="incomeBtn">
+
+                    <span>📈</span>
+
+                    <span>Income</span>
+
+                </li>
+
+                <li id="analyticsBtn">
+
+                    <span>📊</span>
+
+                    <span>Analytics</span>
+
+                </li>
+
+                <li id="settingsBtn">
+
+                    <span>⚙️</span>
+
+                    <span>Settings</span>
+
+                </li>
+
+                <li id="logoutBtn">
+
+                    <span>🚪</span>
+
+                    <span>Logout</span>
+
+                </li>
+
+            </ul>
 
         </div>
 
-        <ul class="menu">
-
-            <li class="active">🏠 Dashboard</li>
-
-            <li>💸 Expenses</li>
-
-            <li>📈 Income</li>
-
-            <li>📊 Analytics</li>
-
-            <li>⚙ Settings</li>
-
-            <li>🚪 Logout</li>
-
-        </ul>
-
         <div class="sidebar-footer">
 
-            <h3>👤 Mugdha</h3>
+            <div class="profile-icon">
 
-            <p>Welcome Back!</p>
+                👤
+
+            </div>
+
+            <div>
+
+                <h3 id="usernameDisplay">
+
+                    Mugdha
+
+                </h3>
+
+                <p>
+
+                    Welcome Back!
+
+                </p>
+
+            </div>
 
         </div>
 
     </aside>
 
-    <!-- ================= MAIN ================= -->
+    <!-- =========================
+            MAIN CONTENT
+    ========================== -->
 
     <main class="content">
 
-        <!-- HEADER -->
+        <!-- TOP BAR -->
 
         <header class="topbar">
 
             <div>
 
-                <h1>Dashboard</h1>
+                <h1>
 
-                <p>Manage your finances efficiently.</p>
+                    Dashboard
+
+                </h1>
+
+                <p>
+
+                    Track your money with confidence.
+
+                </p>
 
             </div>
 
-            <button class="add-btn" id="showFormBtn">
+            <div class="topbar-actions">
 
-                + Add Transaction
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="🔍 Search transaction">
 
-            </button>
+                <button
+                    class="add-btn"
+                    id="showFormBtn">
+
+                    + Add Transaction
+
+                </button>
+
+            </div>
 
         </header>
 
-        <!-- SUMMARY -->
+        <!-- DASHBOARD SECTION -->
 
-        <section class="cards">
+        <section id="dashboardSection">
 
-            <div class="card balance-card">
+            <!-- SUMMARY CARDS -->
 
-                <span>💰</span>
+            <section class="cards">
 
-                <h3>Total Balance</h3>
+                <div class="card balance-card">
 
-                <h2 id="balanceAmount">₹0</h2>
+                    <h3>Total Balance</h3>
 
-            </div>
+                    <h2 id="balanceAmount">
 
-            <div class="card income-card">
+                        ₹0
 
-                <span>📈</span>
-
-                <h3>Total Income</h3>
-
-                <h2 id="incomeAmount">₹0</h2>
-
-            </div>
-
-            <div class="card expense-card">
-
-                <span>💸</span>
-
-                <h3>Total Expense</h3>
-
-                <h2 id="expenseAmountCard">₹0</h2>
-
-            </div>
-
-        </section>
-
-        <!-- TRANSACTIONS -->
-
-        <section class="transactions">
-
-            <div class="table-header">
-
-                <h2>Recent Transactions</h2>
-
-            </div>
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>Date</th>
-
-                        <th>Name</th>
-
-                        <th>Category</th>
-
-                        <th>Type</th>
-
-                        <th>Amount</th>
-
-                        <th>Action</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="transactionBody">
-
-                </tbody>
-
-            </table>
-
-        </section>
-
-        <!-- MODAL -->
-
-        <div class="modal-overlay" id="modalOverlay">
-
-            <div class="modal">
-
-                <div class="modal-header">
-
-                    <h2>Add Transaction</h2>
-
-                    <button
-                        class="close-btn"
-                        id="closeModal">
-
-                        &times;
-
-                    </button>
+                    </h2>
 
                 </div>
 
-                <form id="expenseForm">
+                <div class="card income-card">
 
-                    <!-- Transaction Name -->
+                    <h3>Total Income</h3>
 
-                    <div class="form-group">
+                    <h2 id="incomeAmount">
 
-                        <label for="expenseName">
+                        ₹0
 
-                            Transaction Name
+                    </h2>
 
-                        </label>
+                </div>
 
-                        <input
-                            type="text"
-                            id="expenseName"
-                            placeholder="Enter transaction name"
-                            required>
+                <div class="card expense-card">
 
-                    </div>
+                    <h3>Total Expense</h3>
 
-                    <!-- Category -->
+                    <h2 id="expenseAmountCard">
 
-                    <div class="form-group">
+                        ₹0
 
-                        <label for="expenseCategory">
+                    </h2>
 
-                            Category
+                </div>
 
-                        </label>
+            </section>
 
-                        <select id="expenseCategory">
+            <!-- FILTER BAR -->
 
-                            <option value="Salary">Salary</option>
+            <section class="filter-bar">
 
-                            <option value="Food">Food</option>
+                <select id="categoryFilter">
 
-                            <option value="Shopping">Shopping</option>
+                    <option value="all">
 
-                            <option value="Entertainment">Entertainment</option>
+                        All Categories
 
-                            <option value="Travel">Travel</option>
+                    </option>
 
-                            <option value="Utilities">Utilities</option>
+                    <option value="Food">Food</option>
 
-                            <option value="Healthcare">Healthcare</option>
+                    <option value="Shopping">Shopping</option>
 
-                            <option value="Education">Education</option>
+                    <option value="Travel">Travel</option>
 
-                            <option value="Other">Other</option>
+                    <option value="Salary">Salary</option>
 
-                        </select>
+                    <option value="Entertainment">Entertainment</option>
 
-                    </div>
+                    <option value="Healthcare">Healthcare</option>
 
-                    <!-- Type -->
+                    <option value="Education">Education</option>
 
-                    <div class="form-group">
+                    <option value="Utilities">Utilities</option>
 
-                        <label for="transactionType">
+                    <option value="Other">Other</option>
 
-                            Transaction Type
+                </select>
 
-                        </label>
+                <select id="sortTransactions">
 
-                        <select id="transactionType">
+                    <option value="latest">
 
-                            <option value="income">
+                        Latest First
 
-                                🟢 Income
+                    </option>
 
-                            </option>
+                    <option value="oldest">
 
-                            <option value="expense" selected>
+                        Oldest First
 
-                                🔴 Expense
+                    </option>
 
-                            </option>
+                    <option value="high">
 
-                        </select>
+                        Highest Amount
 
-                    </div>
+                    </option>
 
-                    <!-- Amount -->
+                    <option value="low">
 
-                    <div class="form-group">
+                        Lowest Amount
 
-                        <label for="expenseAmount">
+                    </option>
 
-                            Amount (₹)
+                </select>
 
-                        </label>
+            </section>
 
-                        <input
-                            type="number"
-                            id="expenseAmount"
-                            placeholder="Enter amount"
-                            required>
+            <!-- TRANSACTION TABLE -->
 
-                    </div>
+            <section class="transactions">
 
-                    <!-- Date -->
+                <div class="table-header">
 
-                    <div class="form-group">
+                    <h2>
 
-                        <label for="transactionDate">
+                        Recent Transactions
 
-                            Date
+                    </h2>
 
-                        </label>
+                </div>
 
-                        <input
-                            type="date"
-                            id="transactionDate"
-                            required>
+                <table>
 
-                    </div>
+                    <thead>
 
-                    <button
-                        type="submit"
-                        class="save-btn">
+                        <tr>
 
-                        Save Transaction
+                            <th>Date</th>
 
-                    </button>
+                            <th>Name</th>
 
-                </form>
+                            <th>Category</th>
+
+                            <th>Type</th>
+
+                            <th>Amount</th>
+
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="transactionBody">
+
+                    </tbody>
+
+                </table>
+
+            </section>
+
+        </section>
+                <!-- =========================
+                ANALYTICS
+        ========================== -->
+
+        <section id="analyticsSection" class="analytics hidden">
+
+            <div class="section-header">
+
+                <h2>📊 Analytics Dashboard</h2>
 
             </div>
 
-        </div>
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <h3>Total Transactions</h3>
+
+                    <h2 id="totalTransactions">0</h2>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <h3>Total Savings</h3>
+
+                    <h2 id="savingsAmount">₹0</h2>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <h3>Highest Expense</h3>
+
+                    <h2 id="highestExpense">₹0</h2>
+
+                </div>
+
+            </div>
+
+            <div class="chart-grid">
+
+                <div class="chart-card">
+
+                    <h3>Income vs Expense</h3>
+
+                    <canvas id="incomeExpenseChart"></canvas>
+
+                </div>
+
+                <div class="chart-card">
+
+                    <h3>Expense Categories</h3>
+
+                    <canvas id="categoryChart"></canvas>
+
+                </div>
+
+                <div class="chart-card full-width">
+
+                    <h3>Monthly Expenses</h3>
+
+                    <canvas id="monthlyChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- =========================
+                SETTINGS
+        ========================== -->
+
+        <section id="settingsSection" class="settings hidden">
+
+            <div class="settings-header">
+
+                <h2>⚙️ Settings</h2>
+
+            </div>
+
+            <div class="settings-card">
+
+                <button id="clearDataBtn">
+
+                    🗑 Clear All Transactions
+
+                </button>
+
+                <button id="exportBtn">
+
+                    📄 Export CSV
+
+                </button>
+
+            </div>
+
+        </section>
 
     </main>
 
 </div>
+
+<!-- =========================
+        ADD TRANSACTION MODAL
+========================== -->
+
+<div class="modal-overlay" id="modalOverlay">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h2>Add Transaction</h2>
+
+            <button id="closeModal">
+
+                &times;
+
+            </button>
+
+        </div>
+
+        <form id="expenseForm">
+
+            <div class="form-group">
+
+                <label>
+
+                    Transaction Name
+
+                </label>
+
+                <input
+                    type="text"
+                    id="expenseName"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+
+                    Category
+
+                </label>
+
+                <select id="expenseCategory">
+
+                    <option>Food</option>
+                    <option>Shopping</option>
+                    <option>Travel</option>
+                    <option>Salary</option>
+                    <option>Entertainment</option>
+                    <option>Healthcare</option>
+                    <option>Education</option>
+                    <option>Utilities</option>
+                    <option>Other</option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+
+                    Transaction Type
+
+                </label>
+
+                <select id="transactionType">
+
+                    <option value="income">
+
+                        Income
+
+                    </option>
+
+                    <option value="expense">
+
+                        Expense
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+
+                    Amount
+
+                </label>
+
+                <input
+                    type="number"
+                    id="expenseAmount"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+
+                    Date
+
+                </label>
+
+                <input
+                    type="date"
+                    id="transactionDate"
+                    required>
+
+            </div>
+
+            <div class="form-buttons">
+
+                <button
+                    type="submit"
+                    class="save-btn">
+
+                    Save Transaction
+
+                </button>
+
+                <button
+                    type="button"
+                    class="cancel-btn"
+                    id="cancelBtn">
+
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================
+        LOGOUT MODAL
+========================== -->
+
+<div id="logoutModal" class="modal-overlay">
+
+    <div class="modal">
+
+        <h2>Logout</h2>
+
+        <p>
+
+            Are you sure you want to logout?
+
+        </p>
+
+        <div class="form-buttons">
+
+            <button
+                id="confirmLogout"
+                class="save-btn">
+
+                Yes
+
+            </button>
+
+            <button
+                id="cancelLogout"
+                class="cancel-btn">
+
+                No
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="../js/dashboard.js"></script>
 
