@@ -28,9 +28,7 @@
 
 <div class="dashboard">
 
-    <!-- ===========================
-         SIDEBAR
-    ============================ -->
+    <!-- ================= SIDEBAR ================= -->
 
     <aside class="sidebar">
 
@@ -42,41 +40,17 @@
 
         <ul class="menu">
 
-            <li class="active">
+            <li class="active">🏠 Dashboard</li>
 
-                🏠 Dashboard
+            <li>💸 Expenses</li>
 
-            </li>
+            <li>📈 Income</li>
 
-            <li>
+            <li>📊 Analytics</li>
 
-                💸 Expenses
+            <li>⚙ Settings</li>
 
-            </li>
-
-            <li>
-
-                📈 Income
-
-            </li>
-
-            <li>
-
-                📊 Analytics
-
-            </li>
-
-            <li>
-
-                ⚙ Settings
-
-            </li>
-
-            <li>
-
-                🚪 Logout
-
-            </li>
+            <li>🚪 Logout</li>
 
         </ul>
 
@@ -90,9 +64,7 @@
 
     </aside>
 
-    <!-- ===========================
-         MAIN CONTENT
-    ============================ -->
+    <!-- ================= MAIN ================= -->
 
     <main class="content">
 
@@ -104,21 +76,19 @@
 
                 <h1>Dashboard</h1>
 
-                <p>
-                    Manage your finances efficiently.
-                </p>
+                <p>Manage your finances efficiently.</p>
 
             </div>
 
             <button class="add-btn" id="showFormBtn">
 
-                + Add Expense
+                + Add Transaction
 
             </button>
 
         </header>
 
-        <!-- SUMMARY CARDS -->
+        <!-- SUMMARY -->
 
         <section class="cards">
 
@@ -128,11 +98,7 @@
 
                 <h3>Total Balance</h3>
 
-                <h2 id="balanceAmount">
-
-                    ₹25,450
-
-                </h2>
+                <h2 id="balanceAmount">₹0</h2>
 
             </div>
 
@@ -142,11 +108,7 @@
 
                 <h3>Total Income</h3>
 
-                <h2 id="incomeAmount">
-
-                    ₹40,000
-
-                </h2>
+                <h2 id="incomeAmount">₹0</h2>
 
             </div>
 
@@ -156,11 +118,7 @@
 
                 <h3>Total Expense</h3>
 
-                <h2 id="expenseAmountCard">
-
-                    ₹14,550
-
-                </h2>
+                <h2 id="expenseAmountCard">₹0</h2>
 
             </div>
 
@@ -182,9 +140,13 @@
 
                     <tr>
 
+                        <th>Date</th>
+
                         <th>Name</th>
 
                         <th>Category</th>
+
+                        <th>Type</th>
 
                         <th>Amount</th>
 
@@ -196,16 +158,13 @@
 
                 <tbody id="transactionBody">
 
-                    <!-- JavaScript will generate rows -->
-
                 </tbody>
 
             </table>
 
         </section>
-                <!-- ===========================
-             ADD EXPENSE MODAL
-        =========================== -->
+
+        <!-- MODAL -->
 
         <div class="modal-overlay" id="modalOverlay">
 
@@ -213,9 +172,11 @@
 
                 <div class="modal-header">
 
-                    <h2>Add New Expense</h2>
+                    <h2>Add Transaction</h2>
 
-                    <button class="close-btn" id="closeModal">
+                    <button
+                        class="close-btn"
+                        id="closeModal">
 
                         &times;
 
@@ -225,22 +186,25 @@
 
                 <form id="expenseForm">
 
+                    <!-- Transaction Name -->
+
                     <div class="form-group">
 
                         <label for="expenseName">
 
-                            Expense Name
+                            Transaction Name
 
                         </label>
 
                         <input
                             type="text"
                             id="expenseName"
-                            placeholder="Enter expense name"
-                            required
-                        >
+                            placeholder="Enter transaction name"
+                            required>
 
                     </div>
+
+                    <!-- Category -->
 
                     <div class="form-group">
 
@@ -252,18 +216,57 @@
 
                         <select id="expenseCategory">
 
-                            <option value="Food">🍔 Food</option>
-                            <option value="Shopping">🛍 Shopping</option>
-                            <option value="Entertainment">🎬 Entertainment</option>
-                            <option value="Travel">✈ Travel</option>
-                            <option value="Utilities">💡 Utilities</option>
-                            <option value="Healthcare">🏥 Healthcare</option>
-                            <option value="Education">📚 Education</option>
-                            <option value="Other">📦 Other</option>
+                            <option value="Salary">Salary</option>
+
+                            <option value="Food">Food</option>
+
+                            <option value="Shopping">Shopping</option>
+
+                            <option value="Entertainment">Entertainment</option>
+
+                            <option value="Travel">Travel</option>
+
+                            <option value="Utilities">Utilities</option>
+
+                            <option value="Healthcare">Healthcare</option>
+
+                            <option value="Education">Education</option>
+
+                            <option value="Other">Other</option>
 
                         </select>
 
                     </div>
+
+                    <!-- Type -->
+
+                    <div class="form-group">
+
+                        <label for="transactionType">
+
+                            Transaction Type
+
+                        </label>
+
+                        <select id="transactionType">
+
+                            <option value="income">
+
+                                🟢 Income
+
+                            </option>
+
+                            <option value="expense" selected>
+
+                                🔴 Expense
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Amount -->
 
                     <div class="form-group">
 
@@ -277,15 +280,32 @@
                             type="number"
                             id="expenseAmount"
                             placeholder="Enter amount"
-                            min="1"
-                            required
-                        >
+                            required>
 
                     </div>
 
-                    <button type="submit" class="save-btn">
+                    <!-- Date -->
 
-                        Save Expense
+                    <div class="form-group">
+
+                        <label for="transactionDate">
+
+                            Date
+
+                        </label>
+
+                        <input
+                            type="date"
+                            id="transactionDate"
+                            required>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="save-btn">
+
+                        Save Transaction
 
                     </button>
 
