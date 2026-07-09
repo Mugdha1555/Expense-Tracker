@@ -1,24 +1,31 @@
 // ==========================================
 // EXPENSE TRACKER DASHBOARD
-// dashboard.js
-// CHUNK 1
+// CHUNK 1 - VARIABLES & DOM
 // ==========================================
 
-// ---------------- STORAGE ----------------
+// ---------- AUTH ----------
 
-let transactions =
-    JSON.parse(localStorage.getItem("transactions")) || [];
+const token = localStorage.getItem("token");
 
+if (!token) {
+    window.location.href = "login.html";
+}
+
+// ---------- GLOBAL VARIABLES ----------
+
+let transactions = [];
 let editId = null;
 
 let incomeExpenseChart = null;
 let categoryChart = null;
 let monthlyChart = null;
 
-// ---------------- DOM ----------------
+// ---------- TABLE ----------
 
 const transactionBody =
     document.getElementById("transactionBody");
+
+// ---------- SUMMARY CARDS ----------
 
 const balanceAmount =
     document.getElementById("balanceAmount");
@@ -48,9 +55,6 @@ const expenseName =
 
 const expenseCategory =
     document.getElementById("expenseCategory");
-
-const transactionType =
-    document.getElementById("transactionType");
 
 const expenseAmount =
     document.getElementById("expenseAmount");
@@ -132,109 +136,126 @@ const confirmLogout =
 
 const cancelLogout =
     document.getElementById("cancelLogout");
-
+    // ==========================================
+// CHUNK 2
+// UTILITIES + LOAD TRANSACTIONS
 // ==========================================
-// LOCAL STORAGE
-// ==========================================
 
-function saveTransactions() {
+// ---------- FORMAT MONEY ----------
 
-    localStorage.setItem(
-        "transactions",
-        JSON.stringify(transactions)
-    );
+function formatMoney(amount) {
+
+    return "₹" + Number(amount).toLocaleString("en-IN");
 
 }
 
-// ==========================================
-// FORMAT MONEY
-// ==========================================
+// ---------- LOAD TRANSACTIONS ----------
 
-function formatMoney(value) {
+async function loadTransactions() {
 
-    return "₹" + Number(value).toLocaleString("en-IN");
+    try {
+
+        const response = await fetch(
+            "http://localhost:5000/api/expenses",
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+
+            throw new Error("Failed to fetch expenses.");
+
+        }
+
+        transactions = await response.json();
+
+        console.log("Transactions Loaded:", transactions);
+
+        renderTransactions();
+
+        updateSummaryCards();
+
+        updateCharts();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Unable to load transactions.");
+
+    }
 
 }
 
-// ==========================================
-// DASHBOARD TOTALS
-// ==========================================
+// ---------- SUMMARY CARDS ----------
 
 function updateSummaryCards() {
 
-    let income = 0;
-    let expense = 0;
+    let totalExpense = 0;
     let highest = 0;
 
-    transactions.forEach(t => {
+    transactions.forEach(transaction => {
 
-        if (t.type === "income") {
+        totalExpense += Number(transaction.amount);
 
-            income += t.amount;
+        if (Number(transaction.amount) > highest) {
 
-        } else {
-
-            expense += t.amount;
-
-            if (t.amount > highest) {
-
-                highest = t.amount;
-
-            }
+            highest = Number(transaction.amount);
 
         }
 
     });
 
-    balanceAmount.textContent =
-        formatMoney(income - expense);
+    if (balanceAmount)
+        balanceAmount.textContent = formatMoney(0);
 
-    incomeAmount.textContent =
-        formatMoney(income);
+    if (incomeAmount)
+        incomeAmount.textContent = formatMoney(0);
 
-    expenseAmountCard.textContent =
-        formatMoney(expense);
+    if (expenseAmountCard)
+        expenseAmountCard.textContent = formatMoney(totalExpense);
 
-    totalTransactions.textContent =
-        transactions.length;
+    if (totalTransactions)
+        totalTransactions.textContent = transactions.length;
 
-    savingsAmount.textContent =
-        formatMoney(income - expense);
+    if (savingsAmount)
+        savingsAmount.textContent = formatMoney(0);
 
-    highestExpense.textContent =
-        formatMoney(highest);
+    if (highestExpense)
+        highestExpense.textContent = formatMoney(highest);
 
 }
 
+// ---------- EMPTY CHARTS ----------
+
+function updateCharts() {
+
+    // Will be completed later.
+
+}
 // ==========================================
-// RENDER TABLE
+// CHUNK 3
+// RENDER TRANSACTIONS
 // ==========================================
 
 function renderTransactions(data = transactions) {
+
+    if (!transactionBody) return;
 
     transactionBody.innerHTML = "";
 
     if (data.length === 0) {
 
         transactionBody.innerHTML = `
-
-        <tr>
-
-            <td colspan="6"
-                style="
-                text-align:center;
-                padding:35px;
-                color:#64748b;">
-
-                No Transactions Found
-
-            </td>
-
-        </tr>
-
+            <tr>
+                <td colspan="6" style="text-align:center;padding:30px;">
+                    No Transactions Found
+                </td>
+            </tr>
         `;
-
-        updateSummaryCards();
 
         return;
 
@@ -246,43 +267,41 @@ function renderTransactions(data = transactions) {
 
         row.innerHTML = `
 
-        <td>${transaction.date}</td>
+            <td>
+                ${new Date(transaction.date).toLocaleDateString("en-IN")}
+            </td>
 
-        <td>${transaction.name}</td>
+            <td>
+                ${transaction.title}
+            </td>
 
-        <td>${transaction.category}</td>
+            <td>
+                ${transaction.category}
+            </td>
 
-        <td class="${transaction.type}">
+            <td>
+                ${formatMoney(transaction.amount)}
+            </td>
 
-            ${transaction.type}
+            <td>
 
-        </td>
+                <button
+                    class="edit-btn"
+                    onclick="editTransaction('${transaction._id}')">
 
-        <td>
+                    Edit
 
-            ${formatMoney(transaction.amount)}
+                </button>
 
-        </td>
+                <button
+                    class="delete-btn"
+                    onclick="deleteTransaction('${transaction._id}')">
 
-        <td>
+                    Delete
 
-            <button
-                class="edit-btn"
-                onclick="editTransaction(${transaction.id})">
+                </button>
 
-                Edit
-
-            </button>
-
-            <button
-                class="delete-btn"
-                onclick="deleteTransaction(${transaction.id})">
-
-                Delete
-
-            </button>
-
-        </td>
+            </td>
 
         `;
 
@@ -290,41 +309,29 @@ function renderTransactions(data = transactions) {
 
     });
 
-    updateSummaryCards();
-
 }
 // ==========================================
-// CHUNK 2
-// ADD / EDIT / DELETE / MODAL
+// CHUNK 4
+// MODAL + ADD + EDIT + DELETE
 // ==========================================
 
 // ---------- OPEN MODAL ----------
 
-showFormBtn.addEventListener("click", () => {
+if (showFormBtn) {
 
-    expenseForm.reset();
+    showFormBtn.addEventListener("click", () => {
 
-    editId = null;
+        editId = null;
 
-    modalOverlay.classList.add("active");
+        expenseForm.reset();
 
-});
+        modalOverlay.classList.add("active");
+
+    });
+
+}
 
 // ---------- CLOSE MODAL ----------
-
-closeModal.addEventListener("click", closeExpenseModal);
-
-cancelBtn.addEventListener("click", closeExpenseModal);
-
-modalOverlay.addEventListener("click", (e) => {
-
-    if (e.target === modalOverlay) {
-
-        closeExpenseModal();
-
-    }
-
-});
 
 function closeExpenseModal() {
 
@@ -332,103 +339,193 @@ function closeExpenseModal() {
 
 }
 
-// ---------- ADD / UPDATE ----------
+if (closeModal) {
 
-expenseForm.addEventListener("submit", function (e) {
+    closeModal.addEventListener("click", closeExpenseModal);
+
+}
+
+if (cancelBtn) {
+
+    cancelBtn.addEventListener("click", closeExpenseModal);
+
+}
+
+if (modalOverlay) {
+
+    modalOverlay.addEventListener("click", (e) => {
+
+        if (e.target === modalOverlay) {
+
+            closeExpenseModal();
+
+        }
+
+    });
+
+}
+
+// ---------- SAVE TRANSACTION ----------
+
+expenseForm.addEventListener("submit", async function (e) {
 
     e.preventDefault();
 
-    const transaction = {
+    const expense = {
 
-        id: editId ? editId : Date.now(),
-
-        name: expenseName.value.trim(),
-
-        category: expenseCategory.value,
-
-        type: transactionType.value,
+        title: expenseName.value.trim(),
 
         amount: Number(expenseAmount.value),
+
+        category: expenseCategory.value,
 
         date: transactionDate.value
 
     };
 
-    if (transaction.name === "") {
+    if (!expense.title) {
 
-        alert("Please enter transaction name.");
-
-        return;
-
-    }
-
-    if (transaction.amount <= 0) {
-
-        alert("Amount must be greater than 0.");
+        alert("Enter transaction name.");
 
         return;
 
     }
 
-    if (transaction.date === "") {
+    if (expense.amount <= 0) {
 
-        alert("Please select a date.");
+        alert("Enter a valid amount.");
 
         return;
 
     }
 
-    if (editId) {
+    if (!expense.date) {
 
-        const index = transactions.findIndex(t => t.id === editId);
+        alert("Select a date.");
 
-        transactions[index] = transaction;
+        return;
+
+    }
+
+    try {
+
+        let response;
+
+        if (editId) {
+
+            response = await fetch(
+
+                `http://localhost:5000/api/expenses/${editId}`,
+
+                {
+
+                    method: "PUT",
+
+                    headers: {
+
+                        "Content-Type": "application/json",
+
+                        Authorization: `Bearer ${token}`
+
+                    },
+
+                    body: JSON.stringify(expense)
+
+                }
+
+            );
+
+        } else {
+
+            response = await fetch(
+
+                "http://localhost:5000/api/expenses",
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type": "application/json",
+
+                        Authorization: `Bearer ${token}`
+
+                    },
+
+                    body: JSON.stringify(expense)
+
+                }
+
+            );
+
+        }
+
+        if (!response.ok) {
+
+            throw new Error("Failed to save expense.");
+
+        }
 
         editId = null;
 
+        expenseForm.reset();
+
+        closeExpenseModal();
+
+        await loadTransactions();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Unable to save expense.");
+
     }
-
-    else {
-
-        transactions.push(transaction);
-
-    }
-
-    saveTransactions();
-
-    renderTransactions();
-
-    updateCharts();
-
-    closeExpenseModal();
-
-    expenseForm.reset();
 
 });
 
 // ---------- DELETE ----------
 
-function deleteTransaction(id) {
+async function deleteTransaction(id) {
 
-    const confirmDelete = confirm(
+    if (!confirm("Delete this expense?")) return;
 
-        "Delete this transaction?"
+    try {
 
-    );
+        const response = await fetch(
 
-    if (!confirmDelete) return;
+            `http://localhost:5000/api/expenses/${id}`,
 
-    transactions = transactions.filter(
+            {
 
-        t => t.id !== id
+                method: "DELETE",
 
-    );
+                headers: {
 
-    saveTransactions();
+                    Authorization: `Bearer ${token}`
 
-    renderTransactions();
+                }
 
-    updateCharts();
+            }
+
+        );
+
+        if (!response.ok) {
+
+            throw new Error("Delete failed.");
+
+        }
+
+        await loadTransactions();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Unable to delete expense.");
+
+    }
 
 }
 
@@ -438,7 +535,7 @@ function editTransaction(id) {
 
     const transaction = transactions.find(
 
-        t => t.id === id
+        t => t._id === id
 
     );
 
@@ -446,276 +543,255 @@ function editTransaction(id) {
 
     editId = id;
 
-    expenseName.value = transaction.name;
+    expenseName.value = transaction.title;
 
     expenseCategory.value = transaction.category;
 
-    transactionType.value = transaction.type;
-
     expenseAmount.value = transaction.amount;
 
-    transactionDate.value = transaction.date;
+    transactionDate.value =
+        new Date(transaction.date)
+            .toISOString()
+            .split("T")[0];
 
     modalOverlay.classList.add("active");
 
 }
-
-// ---------- REFRESH ----------
-
-function refreshDashboard() {
-
-    renderTransactions();
-
-    updateSummaryCards();
-
-    updateCharts();
-
-}
 // ==========================================
-// CHUNK 3
-// SIDEBAR + NAVIGATION + SEARCH + FILTER + SORT
+// CHUNK 5
+// SEARCH + FILTER + SIDEBAR + NAVIGATION
 // ==========================================
 
-// ---------- ACTIVE MENU ----------
-
-function setActive(btn) {
-
-    document.querySelectorAll(".menu li")
-        .forEach(item => item.classList.remove("active"));
-
-    btn.classList.add("active");
-}
-
-// ---------- DASHBOARD VIEW ----------
-
-dashboardBtn.addEventListener("click", () => {
-
-    showSection("dashboard");
-
-    renderTransactions();
-
-    setActive(dashboardBtn);
-
-});
-
-// ---------- EXPENSE VIEW ----------
-
-expenseBtn.addEventListener("click", () => {
-
-    showSection("dashboard");
-
-    const expenses = transactions.filter(
-        t => t.type === "expense"
-    );
-
-    renderTransactions(expenses);
-
-    setActive(expenseBtn);
-
-});
-
-// ---------- INCOME VIEW ----------
-
-incomeBtn.addEventListener("click", () => {
-
-    showSection("dashboard");
-
-    const income = transactions.filter(
-        t => t.type === "income"
-    );
-
-    renderTransactions(income);
-
-    setActive(incomeBtn);
-
-});
-
-// ---------- ANALYTICS VIEW ----------
-
-analyticsBtn.addEventListener("click", () => {
-
-    showSection("analytics");
-
-    updateCharts();
-
-    setActive(analyticsBtn);
-
-});
-
-// ---------- SETTINGS VIEW ----------
-
-settingsBtn.addEventListener("click", () => {
-
-    showSection("settings");
-
-    setActive(settingsBtn);
-
-});
-
-// ---------- LOGOUT ----------
-
-logoutBtn.addEventListener("click", () => {
-
-    logoutModal.classList.add("active");
-
-});
-
-cancelLogout.addEventListener("click", () => {
-
-    logoutModal.classList.remove("active");
-
-});
-
-confirmLogout.addEventListener("click", () => {
-
-    localStorage.removeItem("transactions");
-
-    window.location.href = "login.html";
-
-});
-
-// ---------- SEARCH ----------
-
-searchInput.addEventListener("input", () => {
-
-    const keyword = searchInput.value.toLowerCase();
-
-    const filtered = transactions.filter(t =>
-
-        t.name.toLowerCase().includes(keyword) ||
-        t.category.toLowerCase().includes(keyword)
-
-    );
-
-    renderTransactions(filtered);
-
-});
-
-// ---------- FILTER ----------
-
-categoryFilter.addEventListener("change", () => {
-
-    if (categoryFilter.value === "all") {
-
-        renderTransactions();
-
-        return;
-
-    }
-
-    const filtered = transactions.filter(t =>
-
-        t.category === categoryFilter.value
-
-    );
-
-    renderTransactions(filtered);
-
-});
-
-// ---------- SORT ----------
-
-sortTransactions.addEventListener("change", () => {
-
-    let sorted = [...transactions];
-
-    switch (sortTransactions.value) {
-
-        case "latest":
-            sorted.sort((a, b) =>
-                new Date(b.date) - new Date(a.date));
-            break;
-
-        case "oldest":
-            sorted.sort((a, b) =>
-                new Date(a.date) - new Date(b.date));
-            break;
-
-        case "high":
-            sorted.sort((a, b) =>
-                b.amount - a.amount);
-            break;
-
-        case "low":
-            sorted.sort((a, b) =>
-                a.amount - b.amount);
-            break;
-    }
-
-    renderTransactions(sorted);
-
-});
-
-// ---------- SECTION SWITCHER ----------
+// ---------- SHOW SECTION ----------
 
 function showSection(section) {
 
-    dashboardSection.classList.add("hidden");
-    analyticsSection.classList.add("hidden");
-    settingsSection.classList.add("hidden");
+    if (dashboardSection)
+        dashboardSection.classList.add("hidden");
 
-    if (section === "dashboard") {
-        dashboardSection.classList.remove("hidden");
+    if (analyticsSection)
+        analyticsSection.classList.add("hidden");
+
+    if (settingsSection)
+        settingsSection.classList.add("hidden");
+
+    switch (section) {
+
+        case "dashboard":
+            if (dashboardSection)
+                dashboardSection.classList.remove("hidden");
+            break;
+
+        case "analytics":
+            if (analyticsSection)
+                analyticsSection.classList.remove("hidden");
+            break;
+
+        case "settings":
+            if (settingsSection)
+                settingsSection.classList.remove("hidden");
+            break;
     }
-
-    if (section === "analytics") {
-        analyticsSection.classList.remove("hidden");
-    }
-
-    if (section === "settings") {
-        settingsSection.classList.remove("hidden");
-    }
-}
-// ==========================================
-// CHUNK 4 (FINAL)
-// CHARTS + EXPORT + CLEAR + INIT
-// ==========================================
-
-// ---------- UPDATE CHARTS ----------
-
-function updateCharts() {
-
-    renderIncomeExpenseChart();
-    renderCategoryChart();
-    renderMonthlyChart();
 
 }
 
-// ---------- INCOME vs EXPENSE CHART ----------
+// ---------- ACTIVE MENU ----------
 
-function renderIncomeExpenseChart() {
+function setActive(button) {
 
-    const ctx = document.getElementById("incomeExpenseChart");
+    document.querySelectorAll(".menu li").forEach(item => {
+        item.classList.remove("active");
+    });
 
-    if (!ctx) return;
+    if (button)
+        button.classList.add("active");
 
-    if (incomeExpenseChart) incomeExpenseChart.destroy();
+}
 
-    let income = 0;
-    let expense = 0;
+// ---------- SIDEBAR ----------
 
-    transactions.forEach(t => {
+if (dashboardBtn) {
 
-        if (t.type === "income") income += t.amount;
-        else expense += t.amount;
+    dashboardBtn.addEventListener("click", () => {
+
+        showSection("dashboard");
+
+        renderTransactions();
+
+        setActive(dashboardBtn);
 
     });
 
-    incomeExpenseChart = new Chart(ctx, {
+}
+
+if (analyticsBtn) {
+
+    analyticsBtn.addEventListener("click", () => {
+
+        showSection("analytics");
+
+        updateCharts();
+
+        setActive(analyticsBtn);
+
+    });
+
+}
+
+if (settingsBtn) {
+
+    settingsBtn.addEventListener("click", () => {
+
+        showSection("settings");
+
+        setActive(settingsBtn);
+
+    });
+
+}
+
+// ---------- SEARCH ----------
+
+if (searchInput) {
+
+    searchInput.addEventListener("input", () => {
+
+        const keyword = searchInput.value.toLowerCase();
+
+        const filtered = transactions.filter(transaction =>
+
+            transaction.title.toLowerCase().includes(keyword) ||
+
+            transaction.category.toLowerCase().includes(keyword)
+
+        );
+
+        renderTransactions(filtered);
+
+    });
+
+}
+
+// ---------- CATEGORY FILTER ----------
+
+if (categoryFilter) {
+
+    categoryFilter.addEventListener("change", () => {
+
+        const category = categoryFilter.value;
+
+        if (category === "All") {
+
+            renderTransactions();
+
+            return;
+
+        }
+
+        const filtered = transactions.filter(
+
+            transaction => transaction.category === category
+
+        );
+
+        renderTransactions(filtered);
+
+    });
+
+}
+
+// ---------- SORT ----------
+
+if (sortTransactions) {
+
+    sortTransactions.addEventListener("change", () => {
+
+        const sorted = [...transactions];
+
+        switch (sortTransactions.value) {
+
+            case "latest":
+
+                sorted.sort((a, b) =>
+                    new Date(b.date) - new Date(a.date)
+                );
+
+                break;
+
+            case "oldest":
+
+                sorted.sort((a, b) =>
+                    new Date(a.date) - new Date(b.date)
+                );
+
+                break;
+
+            case "highest":
+
+                sorted.sort((a, b) =>
+                    b.amount - a.amount
+                );
+
+                break;
+
+            case "lowest":
+
+                sorted.sort((a, b) =>
+                    a.amount - b.amount
+                );
+
+                break;
+
+        }
+
+        renderTransactions(sorted);
+
+    });
+
+}
+// ==========================================
+// CHUNK 6
+// ANALYTICS CHARTS
+// ==========================================
+
+// ---------- INCOME / EXPENSE CHART ----------
+
+function renderIncomeExpenseChart() {
+
+    const canvas = document.getElementById("incomeExpenseChart");
+
+    if (!canvas) return;
+
+    if (incomeExpenseChart)
+        incomeExpenseChart.destroy();
+
+    const totalExpense = transactions.reduce((sum, t) => {
+        return sum + Number(t.amount);
+    }, 0);
+
+    incomeExpenseChart = new Chart(canvas, {
 
         type: "doughnut",
 
         data: {
 
-            labels: ["Income", "Expense"],
+            labels: ["Expenses"],
 
             datasets: [{
 
-                data: [income, expense],
+                data: [totalExpense],
 
-                backgroundColor: ["#22c55e", "#ef4444"]
+                backgroundColor: ["#EF4444"]
 
             }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false
 
         }
 
@@ -727,48 +803,48 @@ function renderIncomeExpenseChart() {
 
 function renderCategoryChart() {
 
-    const ctx = document.getElementById("categoryChart");
+    const canvas = document.getElementById("categoryChart");
 
-    if (!ctx) return;
+    if (!canvas) return;
 
-    if (categoryChart) categoryChart.destroy();
+    if (categoryChart)
+        categoryChart.destroy();
 
-    const map = {};
+    const categoryTotals = {};
 
-    transactions.forEach(t => {
+    transactions.forEach(transaction => {
 
-        if (t.type === "expense") {
+        if (!categoryTotals[transaction.category]) {
 
-            map[t.category] =
-                (map[t.category] || 0) + t.amount;
+            categoryTotals[transaction.category] = 0;
 
         }
 
+        categoryTotals[transaction.category] += Number(transaction.amount);
+
     });
 
-    categoryChart = new Chart(ctx, {
+    categoryChart = new Chart(canvas, {
 
         type: "pie",
 
         data: {
 
-            labels: Object.keys(map),
+            labels: Object.keys(categoryTotals),
 
             datasets: [{
 
-                data: Object.values(map),
-
-                backgroundColor: [
-
-                    "#3b82f6",
-                    "#22c55e",
-                    "#f59e0b",
-                    "#ef4444",
-                    "#8b5cf6"
-
-                ]
+                data: Object.values(categoryTotals)
 
             }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false
 
         }
 
@@ -780,49 +856,55 @@ function renderCategoryChart() {
 
 function renderMonthlyChart() {
 
-    const ctx = document.getElementById("monthlyChart");
+    const canvas = document.getElementById("monthlyChart");
 
-    if (!ctx) return;
+    if (!canvas) return;
 
-    if (monthlyChart) monthlyChart.destroy();
+    if (monthlyChart)
+        monthlyChart.destroy();
 
-    const months = Array(12).fill(0);
+    const monthlyTotals = {};
 
-    transactions.forEach(t => {
+    transactions.forEach(transaction => {
 
-        if (t.type === "expense") {
+        const month = new Date(transaction.date)
+            .toLocaleString("default", {
+                month: "short"
+            });
 
-            const m = new Date(t.date).getMonth();
+        if (!monthlyTotals[month]) {
 
-            months[m] += t.amount;
+            monthlyTotals[month] = 0;
 
         }
 
+        monthlyTotals[month] += Number(transaction.amount);
+
     });
 
-    monthlyChart = new Chart(ctx, {
+    monthlyChart = new Chart(canvas, {
 
         type: "bar",
 
         data: {
 
-            labels: [
-
-                "Jan","Feb","Mar","Apr","May","Jun",
-
-                "Jul","Aug","Sep","Oct","Nov","Dec"
-
-            ],
+            labels: Object.keys(monthlyTotals),
 
             datasets: [{
 
                 label: "Expenses",
 
-                data: months,
-
-                backgroundColor: "#3b82f6"
+                data: Object.values(monthlyTotals)
 
             }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false
 
         }
 
@@ -830,62 +912,185 @@ function renderMonthlyChart() {
 
 }
 
-// ---------- CLEAR DATA ----------
+// ---------- UPDATE ALL CHARTS ----------
 
-clearDataBtn.addEventListener("click", () => {
+function updateCharts() {
 
-    if (!confirm("Clear all transactions?")) return;
+    renderIncomeExpenseChart();
 
-    transactions = [];
+    renderCategoryChart();
 
-    saveTransactions();
+    renderMonthlyChart();
 
-    renderTransactions();
-
-    updateCharts();
-
-});
+}
+// ==========================================
+// CHUNK 7
+// EXPORT + CLEAR DATA + LOGOUT
+// ==========================================
 
 // ---------- EXPORT CSV ----------
 
-exportBtn.addEventListener("click", () => {
+if (exportBtn) {
 
-    if (transactions.length === 0) {
+    exportBtn.addEventListener("click", () => {
 
-        alert("No data to export");
+        if (transactions.length === 0) {
 
-        return;
+            alert("No transactions to export.");
 
-    }
+            return;
 
-    let csv = "Name,Category,Type,Amount,Date\n";
+        }
 
-    transactions.forEach(t => {
+        let csv = "Title,Category,Amount,Date\n";
 
-        csv += `${t.name},${t.category},${t.type},${t.amount},${t.date}\n`;
+        transactions.forEach(transaction => {
+
+            csv += `"${transaction.title}","${transaction.category}",${transaction.amount},"${new Date(transaction.date).toLocaleDateString()}"\n`;
+
+        });
+
+        const blob = new Blob([csv], {
+
+            type: "text/csv"
+
+        });
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+
+        a.href = url;
+
+        a.download = "expenses.csv";
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
 
     });
 
-    const blob = new Blob([csv], { type: "text/csv" });
+}
 
-    const url = window.URL.createObjectURL(blob);
+// ---------- CLEAR ALL DATA ----------
 
-    const a = document.createElement("a");
+if (clearDataBtn) {
 
-    a.href = url;
+    clearDataBtn.addEventListener("click", async () => {
 
-    a.download = "transactions.csv";
+        const confirmDelete = confirm(
 
-    a.click();
+            "Delete ALL expenses permanently?"
 
-});
+        );
 
-// ---------- INIT APP ----------
+        if (!confirmDelete) return;
 
-document.addEventListener("DOMContentLoaded", () => {
+        try {
 
-    renderTransactions();
+            for (const transaction of transactions) {
 
-    updateCharts();
+                await fetch(
+
+                    `http://localhost:5000/api/expenses/${transaction._id}`,
+
+                    {
+
+                        method: "DELETE",
+
+                        headers: {
+
+                            Authorization: `Bearer ${token}`
+
+                        }
+
+                    }
+
+                );
+
+            }
+
+            await loadTransactions();
+
+            alert("All expenses deleted.");
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Unable to delete all expenses.");
+
+        }
+
+    });
+
+}
+
+// ---------- LOGOUT ----------
+
+if (logoutBtn) {
+
+    logoutBtn.addEventListener("click", () => {
+
+        if (logoutModal) {
+
+            logoutModal.classList.add("active");
+
+        } else {
+
+            localStorage.removeItem("token");
+
+            window.location.href = "login.html";
+
+        }
+
+    });
+
+}
+
+if (confirmLogout) {
+
+    confirmLogout.addEventListener("click", () => {
+
+        localStorage.removeItem("token");
+
+        window.location.href = "login.html";
+
+    });
+
+}
+
+if (cancelLogout) {
+
+    cancelLogout.addEventListener("click", () => {
+
+        logoutModal.classList.remove("active");
+
+    });
+
+}
+// ==========================================
+// CHUNK 8
+// INITIALIZATION
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    console.log("Dashboard Initialized");
+
+    // Load all transactions
+    await loadTransactions();
+
+    // Show dashboard by default
+    showSection("dashboard");
+
+    // Highlight dashboard menu
+    if (dashboardBtn) {
+        setActive(dashboardBtn);
+    }
 
 });

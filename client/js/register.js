@@ -8,9 +8,7 @@ const confirmPassword = document.getElementById("confirmPassword");
 const togglePassword = document.getElementById("togglePassword");
 const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
 
-// Toggle Password
 togglePassword.addEventListener("click", () => {
-
     if (password.type === "password") {
         password.type = "text";
         togglePassword.classList.replace("fa-eye", "fa-eye-slash");
@@ -18,12 +16,9 @@ togglePassword.addEventListener("click", () => {
         password.type = "password";
         togglePassword.classList.replace("fa-eye-slash", "fa-eye");
     }
-
 });
 
-// Toggle Confirm Password
 toggleConfirmPassword.addEventListener("click", () => {
-
     if (confirmPassword.type === "password") {
         confirmPassword.type = "text";
         toggleConfirmPassword.classList.replace("fa-eye", "fa-eye-slash");
@@ -31,11 +26,10 @@ toggleConfirmPassword.addEventListener("click", () => {
         confirmPassword.type = "password";
         toggleConfirmPassword.classList.replace("fa-eye-slash", "fa-eye");
     }
-
 });
 
 // ===========================
-// FORM VALIDATION
+// FORM VALIDATION + BACKEND
 // ===========================
 
 const form = document.getElementById("registerForm");
@@ -48,11 +42,10 @@ const emailError = document.getElementById("emailError");
 const passwordError = document.getElementById("passwordError");
 const confirmPasswordError = document.getElementById("confirmPasswordError");
 
-form.addEventListener("submit", function (event) {
+form.addEventListener("submit", async function (event) {
 
     event.preventDefault();
 
-    // Clear previous errors
     nameError.textContent = "";
     emailError.textContent = "";
     passwordError.textContent = "";
@@ -60,13 +53,11 @@ form.addEventListener("submit", function (event) {
 
     let isValid = true;
 
-    // Full Name
     if (nameInput.value.trim() === "") {
         nameError.textContent = "Full name is required.";
         isValid = false;
     }
 
-    // Email
     if (emailInput.value.trim() === "") {
         emailError.textContent = "Email is required.";
         isValid = false;
@@ -75,7 +66,6 @@ form.addEventListener("submit", function (event) {
         isValid = false;
     }
 
-    // Password
     if (password.value.trim() === "") {
         passwordError.textContent = "Password is required.";
         isValid = false;
@@ -84,7 +74,6 @@ form.addEventListener("submit", function (event) {
         isValid = false;
     }
 
-    // Confirm Password
     if (confirmPassword.value.trim() === "") {
         confirmPasswordError.textContent = "Please confirm your password.";
         isValid = false;
@@ -93,8 +82,46 @@ form.addEventListener("submit", function (event) {
         isValid = false;
     }
 
-    if (isValid) {
-        alert("🎉 Account created successfully! (Backend will be added later)");
+    if (!isValid) return;
+
+    try {
+
+        const response = await fetch("http://localhost:5000/api/auth/register", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                password: password.value
+            })
+
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "Registration failed");
+            return;
+        }
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data));
+
+        alert("🎉 Registration Successful!");
+
+        window.location.href = "login.html";
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Cannot connect to server.");
+
     }
 
 });

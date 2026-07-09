@@ -1,30 +1,34 @@
-// Get the password input and eye icon
+// ===========================
+// PASSWORD TOGGLE
+// ===========================
+
 const passwordInput = document.getElementById("password");
 const togglePassword = document.getElementById("togglePassword");
 
-// Toggle password visibility
 togglePassword.addEventListener("click", () => {
 
     if (passwordInput.type === "password") {
         passwordInput.type = "text";
-        togglePassword.classList.remove("fa-eye");
-        togglePassword.classList.add("fa-eye-slash");
+        togglePassword.classList.replace("fa-eye", "fa-eye-slash");
     } else {
         passwordInput.type = "password";
-        togglePassword.classList.remove("fa-eye-slash");
-        togglePassword.classList.add("fa-eye");
+        togglePassword.classList.replace("fa-eye-slash", "fa-eye");
     }
 
 });
-// Form Validation
+
+// ===========================
+// LOGIN FORM
+// ===========================
 
 const loginForm = document.getElementById("loginForm");
+
 const email = document.getElementById("email");
 
 const emailError = document.getElementById("emailError");
 const passwordError = document.getElementById("passwordError");
 
-loginForm.addEventListener("submit", function (event) {
+loginForm.addEventListener("submit", async function (event) {
 
     event.preventDefault();
 
@@ -43,6 +47,7 @@ loginForm.addEventListener("submit", function (event) {
 
         emailError.textContent = "Enter a valid email.";
         isValid = false;
+
     }
 
     // Password validation
@@ -55,11 +60,56 @@ loginForm.addEventListener("submit", function (event) {
 
         passwordError.textContent = "Password must be at least 6 characters.";
         isValid = false;
+
     }
 
-    if (isValid) {
+    if (!isValid) return;
 
-        alert("Login Successful! (Backend will be added later)");
+    try {
+
+        const response = await fetch("http://localhost:5000/api/auth/login", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                email: email.value.trim(),
+                password: passwordInput.value
+
+            })
+
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            alert(data.message || "Login Failed");
+
+            return;
+
+        }
+
+        // Save token
+        localStorage.setItem("token", data.token);
+
+        // Save user
+        localStorage.setItem("user", JSON.stringify(data));
+
+        alert("🎉 Login Successful!");
+
+        // Redirect to Dashboard
+        window.location.href = "dashboard.html";
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Cannot connect to the server.");
 
     }
 
