@@ -25,6 +25,74 @@ let monthlyChart = null;
 const transactionBody =
     document.getElementById("transactionBody");
 
+    function renderActivityTimeline(){
+
+    const container =
+        document.getElementById("activityTimeline");
+
+    if(!container) return;
+
+    container.innerHTML="";
+
+    const latest =
+        [...transactions]
+        .sort((a,b)=>
+            new Date(b.date)-new Date(a.date))
+        .slice(0,5);
+
+    latest.forEach(transaction=>{
+
+        const div=document.createElement("div");
+
+        div.className="activity-item";
+
+        div.innerHTML=`
+
+        <div class="activity-left">
+
+            <div class="activity-icon ${transaction.type==="income"
+                ?"income-icon"
+                :"expense-icon"}">
+
+                ${transaction.type==="income"
+                    ?"📈"
+                    :"💸"}
+
+            </div>
+
+            <div>
+
+                <div class="activity-title">
+
+                    ${transaction.title}
+
+                </div>
+
+                <div class="activity-date">
+
+                    ${new Date(transaction.date)
+                        .toLocaleDateString("en-IN")}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="activity-amount">
+
+            ${formatMoney(transaction.amount)}
+
+        </div>
+
+        `;
+
+        container.appendChild(div);
+
+    });
+
+}
+
 // ---------- SUMMARY CARDS ----------
 
 const balanceAmount =
@@ -126,6 +194,12 @@ const clearDataBtn =
 const exportBtn =
     document.getElementById("exportBtn");
 
+    const budgetInput =
+    document.getElementById("budgetInput");
+
+const saveBudgetBtn =
+    document.getElementById("saveBudgetBtn");
+
 // ---------- LOGOUT ----------
 
 const logoutModal =
@@ -136,6 +210,30 @@ const confirmLogout =
 
 const cancelLogout =
     document.getElementById("cancelLogout");
+
+    // ---------- TOAST ----------
+
+const toast =
+    document.getElementById("toast");
+
+const toastMessage =
+    document.getElementById("toastMessage");
+
+function showToast(message) {
+
+    if (!toast) return;
+
+    toastMessage.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    }, 3000);
+
+}
     // ==========================================
 // CHUNK 2
 // UTILITIES + LOAD TRANSACTIONS
@@ -146,6 +244,41 @@ const cancelLogout =
 function formatMoney(amount) {
 
     return "₹" + Number(amount).toLocaleString("en-IN");
+
+}
+// ---------- ANIMATE NUMBER ----------
+
+function animateValue(element, start, end, duration = 1200) {
+
+    if (!element) return;
+
+    let startTime = null;
+
+    function animation(currentTime) {
+
+        if (!startTime)
+            startTime = currentTime;
+
+        const progress = Math.min(
+            (currentTime - startTime) / duration,
+            1
+        );
+
+        const value = Math.floor(
+            progress * (end - start) + start
+        );
+
+        element.textContent = formatMoney(value);
+
+        if (progress < 1) {
+
+            requestAnimationFrame(animation);
+
+        }
+
+    }
+
+    requestAnimationFrame(animation);
 
 }
 
@@ -189,44 +322,196 @@ async function loadTransactions() {
     }
 
 }
+// ---------- BUDGET TRACKER ----------
 
-// ---------- SUMMARY CARDS ----------
+function updateBudgetTracker(totalExpense){
+    const budget =
+    Number(localStorage.getItem("monthlyBudget")) || 40000;
 
-function updateSummaryCards() {
+    
 
-    let totalExpense = 0;
-    let highest = 0;
+    const progress =
+        document.getElementById("budgetProgress");
 
-    transactions.forEach(transaction => {
+    const percent =
+        document.getElementById("budgetPercent");
 
-        totalExpense += Number(transaction.amount);
+    const spent =
+        document.getElementById("budgetSpent");
 
-        if (Number(transaction.amount) > highest) {
+    if(!progress) return;
 
-            highest = Number(transaction.amount);
+    const percentage =
+        Math.min((totalExpense / budget) * 100,100);
+
+    progress.style.width =
+        percentage + "%";
+
+    spent.textContent =
+    formatMoney(totalExpense);
+
+document.getElementById("budgetLimit").textContent =
+    formatMoney(budget);
+    percent.textContent =
+        percentage.toFixed(0) + "%";
+
+    if(totalExpense > budget){
+
+        progress.style.background =
+        "linear-gradient(90deg,#ef4444,#dc2626)";
+
+    } else {
+
+        progress.style.background =
+        "linear-gradient(90deg,#10B981,#22C55E)";
+
+    }
+
+}
+
+// ---------- FINANCIAL INSIGHTS ----------
+
+function updateInsights(totalIncome, totalExpense) {
+
+    const insights = document.getElementById("insightsList");
+
+    if (!insights) return;
+
+    insights.innerHTML = "";
+
+    const expenses = transactions.filter(
+        t => t.type === "expense"
+    );
+
+    const incomes = transactions.filter(
+        t => t.type === "income"
+    );
+
+    // Highest Expense
+
+    let highestExpense = null;
+
+    expenses.forEach(expense => {
+
+        if (
+            !highestExpense ||
+            expense.amount > highestExpense.amount
+        ) {
+
+            highestExpense = expense;
 
         }
 
     });
 
+    // Largest Category
+
+    const categoryTotals = {};
+
+    expenses.forEach(expense => {
+
+        categoryTotals[expense.category] =
+            (categoryTotals[expense.category] || 0) +
+            Number(expense.amount);
+
+    });
+
+    let topCategory = "-";
+    let topValue = 0;
+
+    for (let category in categoryTotals) {
+
+        if (categoryTotals[category] > topValue) {
+
+            topValue = categoryTotals[category];
+            topCategory = category;
+
+        }
+
+    }
+
+    const budget = 40000;
+
+    const budgetPercent =
+        ((totalExpense / budget) * 100).toFixed(0);
+
+    const data = [
+
+        `🔥 Highest Expense: ${highestExpense ? highestExpense.title : "-"} (${highestExpense ? formatMoney(highestExpense.amount) : "₹0"})`,
+
+        `📂 Top Category: ${topCategory} (${formatMoney(topValue)})`,
+
+        `💸 Budget Used: ${budgetPercent}%`,
+
+        `📈 Income Transactions: ${incomes.length}`,
+
+        `📉 Expense Transactions: ${expenses.length}`,
+
+        `💰 Current Balance: ${formatMoney(totalIncome - totalExpense)}`
+
+    ];
+
+    data.forEach(text => {
+
+        const li = document.createElement("li");
+
+        li.textContent = text;
+
+        insights.appendChild(li);
+
+    });
+
+}
+
+
+// ---------- SUMMARY CARDS ----------
+
+  function updateSummaryCards() {
+
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let highest = 0;
+
+    transactions.forEach(transaction => {
+
+        if (transaction.type === "income") {
+
+            totalIncome += Number(transaction.amount);
+
+        } else {
+
+            totalExpense += Number(transaction.amount);
+
+            if (Number(transaction.amount) > highest) {
+                highest = Number(transaction.amount);
+            }
+
+        }
+
+    });
+
+    const balance = totalIncome - totalExpense;
+    updateBudgetTracker(totalExpense);
+    updateInsights(totalIncome, totalExpense);
+    renderActivityTimeline();
+
     if (balanceAmount)
-        balanceAmount.textContent = formatMoney(0);
+    animateValue(balanceAmount, 0, balance);
 
-    if (incomeAmount)
-        incomeAmount.textContent = formatMoney(0);
+if (incomeAmount)
+    animateValue(incomeAmount, 0, totalIncome);
 
-    if (expenseAmountCard)
-        expenseAmountCard.textContent = formatMoney(totalExpense);
+if (expenseAmountCard)
+    animateValue(expenseAmountCard, 0, totalExpense);
 
-    if (totalTransactions)
-        totalTransactions.textContent = transactions.length;
+if (savingsAmount)
+    animateValue(savingsAmount, 0, balance);
 
-    if (savingsAmount)
-        savingsAmount.textContent = formatMoney(0);
+if (highestExpense)
+    animateValue(highestExpense, 0, highest);
 
-    if (highestExpense)
-        highestExpense.textContent = formatMoney(highest);
-
+if (totalTransactions)
+    totalTransactions.textContent = transactions.length;
 }
 
 // ---------- EMPTY CHARTS ----------
@@ -373,19 +658,21 @@ expenseForm.addEventListener("submit", async function (e) {
 
     const expense = {
 
-        title: expenseName.value.trim(),
+    title: expenseName.value.trim(),
 
-        amount: Number(expenseAmount.value),
+    amount: Number(expenseAmount.value),
 
-        category: expenseCategory.value,
+    category: expenseCategory.value,
 
-        date: transactionDate.value
+    type: document.getElementById("transactionType").value,
 
-    };
+    date: transactionDate.value
+
+};
 
     if (!expense.title) {
 
-        alert("Enter transaction name.");
+        showToast("Please enter a transaction name.");
 
         return;
 
@@ -393,7 +680,7 @@ expenseForm.addEventListener("submit", async function (e) {
 
     if (expense.amount <= 0) {
 
-        alert("Enter a valid amount.");
+        showToast("Please enter a valid amount.");
 
         return;
 
@@ -401,7 +688,7 @@ expenseForm.addEventListener("submit", async function (e) {
 
     if (!expense.date) {
 
-        alert("Select a date.");
+       showToast("Please select a date.");
 
         return;
 
@@ -474,12 +761,17 @@ expenseForm.addEventListener("submit", async function (e) {
         closeExpenseModal();
 
         await loadTransactions();
+        showToast(
+    editId
+        ? "✅ Transaction updated successfully!"
+        : "✅ Transaction added successfully!"
+);
 
     } catch (error) {
 
         console.error(error);
 
-        alert("Unable to save expense.");
+        showToast("❌ Unable to save transaction.");
 
     }
 
@@ -518,12 +810,13 @@ async function deleteTransaction(id) {
         }
 
         await loadTransactions();
+        showToast("🗑️ Transaction deleted successfully!");
 
     } catch (error) {
 
         console.error(error);
 
-        alert("Unable to delete expense.");
+        showToast("❌ Unable to delete transaction.");
 
     }
 
@@ -543,17 +836,33 @@ function editTransaction(id) {
 
     editId = id;
 
+    // Transaction Name
     expenseName.value = transaction.title;
 
+    // Category
     expenseCategory.value = transaction.category;
 
+    // Amount
     expenseAmount.value = transaction.amount;
 
+    // Date
     transactionDate.value =
         new Date(transaction.date)
             .toISOString()
             .split("T")[0];
 
+    // Income / Expense Type
+    const transactionType =
+        document.getElementById("transactionType");
+
+    if (transactionType) {
+
+        transactionType.value =
+            transaction.type || "expense";
+
+    }
+
+    // Open Modal
     modalOverlay.classList.add("active");
 
 }
@@ -637,6 +946,31 @@ if (analyticsBtn) {
     });
 
 }
+if (expenseBtn) {
+
+    expenseBtn.addEventListener("click", () => {
+
+        showSection("dashboard");
+
+        renderTransactions();
+
+        setActive(expenseBtn);
+
+    });
+
+}
+
+if (incomeBtn) {
+
+    incomeBtn.addEventListener("click", () => {
+
+        showSection("dashboard");
+
+        setActive(incomeBtn);
+
+    });
+
+}
 
 if (settingsBtn) {
 
@@ -701,50 +1035,93 @@ if (categoryFilter) {
 }
 
 // ---------- SORT ----------
+function renderCategoryChart() {
 
-if (sortTransactions) {
+    const canvas = document.getElementById("categoryChart");
 
-    sortTransactions.addEventListener("change", () => {
+    if (!canvas) return;
 
-        const sorted = [...transactions];
+    if (categoryChart)
+        categoryChart.destroy();
 
-        switch (sortTransactions.value) {
+    const categoryTotals = {};
 
-            case "latest":
+    transactions
+        .filter(transaction => transaction.type === "expense")
+        .forEach(transaction => {
 
-                sorted.sort((a, b) =>
-                    new Date(b.date) - new Date(a.date)
-                );
+            if (!categoryTotals[transaction.category]) {
 
-                break;
+                categoryTotals[transaction.category] = 0;
 
-            case "oldest":
+            }
 
-                sorted.sort((a, b) =>
-                    new Date(a.date) - new Date(b.date)
-                );
+            categoryTotals[transaction.category] += Number(transaction.amount);
 
-                break;
+        });
 
-            case "highest":
+    categoryChart = new Chart(canvas, {
 
-                sorted.sort((a, b) =>
-                    b.amount - a.amount
-                );
+        type: "pie",
 
-                break;
+        data: {
 
-            case "lowest":
+            labels: Object.keys(categoryTotals),
 
-                sorted.sort((a, b) =>
-                    a.amount - b.amount
-                );
+            datasets: [{
 
-                break;
+                data: Object.values(categoryTotals),
+
+                backgroundColor: [
+
+                    "#4F46E5",
+                    "#10B981",
+                    "#F59E0B",
+                    "#EF4444",
+                    "#06B6D4",
+                    "#8B5CF6",
+                    "#EC4899",
+                    "#84CC16"
+
+                ],
+
+                borderWidth: 0
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+
+                    position: "bottom",
+
+                    labels: {
+
+                        usePointStyle: true,
+
+                        padding: 20,
+
+                        font: {
+
+                            size: 13
+
+                        }
+
+                    }
+
+                }
+
+            }
 
         }
-
-        renderTransactions(sorted);
 
     });
 
@@ -754,7 +1131,7 @@ if (sortTransactions) {
 // ANALYTICS CHARTS
 // ==========================================
 
-// ---------- INCOME / EXPENSE CHART ----------
+// ---------- INCOME vs EXPENSE ----------
 
 function renderIncomeExpenseChart() {
 
@@ -765,9 +1142,22 @@ function renderIncomeExpenseChart() {
     if (incomeExpenseChart)
         incomeExpenseChart.destroy();
 
-    const totalExpense = transactions.reduce((sum, t) => {
-        return sum + Number(t.amount);
-    }, 0);
+    let income = 0;
+    let expense = 0;
+
+    transactions.forEach(transaction => {
+
+        if (transaction.type === "income") {
+
+            income += Number(transaction.amount);
+
+        } else {
+
+            expense += Number(transaction.amount);
+
+        }
+
+    });
 
     incomeExpenseChart = new Chart(canvas, {
 
@@ -775,13 +1165,24 @@ function renderIncomeExpenseChart() {
 
         data: {
 
-            labels: ["Expenses"],
+            labels: ["Income", "Expense"],
 
             datasets: [{
 
-                data: [totalExpense],
+                data: [income, expense],
 
-                backgroundColor: ["#EF4444"]
+                backgroundColor: [
+
+                    "#10B981",
+                    "#EF4444"
+
+                ],
+
+                borderColor: "#ffffff",
+
+                borderWidth: 4,
+
+                hoverOffset: 15
 
             }]
 
@@ -791,7 +1192,33 @@ function renderIncomeExpenseChart() {
 
             responsive: true,
 
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+
+            cutout: "70%",
+
+            plugins: {
+
+                legend: {
+
+                    position: "bottom",
+
+                    labels: {
+
+                        usePointStyle: true,
+
+                        padding: 20,
+
+                        font: {
+
+                            size: 13
+
+                        }
+
+                    }
+
+                }
+
+            }
 
         }
 
@@ -812,17 +1239,19 @@ function renderCategoryChart() {
 
     const categoryTotals = {};
 
-    transactions.forEach(transaction => {
+    transactions
+        .filter(t => t.type === "expense")
+        .forEach(transaction => {
 
-        if (!categoryTotals[transaction.category]) {
+            if (!categoryTotals[transaction.category]) {
 
-            categoryTotals[transaction.category] = 0;
+                categoryTotals[transaction.category] = 0;
 
-        }
+            }
 
-        categoryTotals[transaction.category] += Number(transaction.amount);
+            categoryTotals[transaction.category] += Number(transaction.amount);
 
-    });
+        });
 
     categoryChart = new Chart(canvas, {
 
@@ -834,7 +1263,24 @@ function renderCategoryChart() {
 
             datasets: [{
 
-                data: Object.values(categoryTotals)
+                data: Object.values(categoryTotals),
+
+                backgroundColor: [
+
+                    "#4F46E5",
+                    "#10B981",
+                    "#F59E0B",
+                    "#EF4444",
+                    "#06B6D4",
+                    "#8B5CF6",
+                    "#EC4899",
+                    "#84CC16"
+
+                ],
+
+                borderColor: "#ffffff",
+
+                borderWidth: 3
 
             }]
 
@@ -844,7 +1290,31 @@ function renderCategoryChart() {
 
             responsive: true,
 
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+
+                    position: "bottom",
+
+                    labels: {
+
+                        usePointStyle: true,
+
+                        padding: 18,
+
+                        font: {
+
+                            size: 13
+
+                        }
+
+                    }
+
+                }
+
+            }
 
         }
 
@@ -863,7 +1333,8 @@ function renderMonthlyChart() {
     if (monthlyChart)
         monthlyChart.destroy();
 
-    const monthlyTotals = {};
+    const monthlyIncome = {};
+    const monthlyExpense = {};
 
     transactions.forEach(transaction => {
 
@@ -872,15 +1343,26 @@ function renderMonthlyChart() {
                 month: "short"
             });
 
-        if (!monthlyTotals[month]) {
+        if (transaction.type === "income") {
 
-            monthlyTotals[month] = 0;
+            monthlyIncome[month] =
+                (monthlyIncome[month] || 0) +
+                Number(transaction.amount);
+
+        } else {
+
+            monthlyExpense[month] =
+                (monthlyExpense[month] || 0) +
+                Number(transaction.amount);
 
         }
 
-        monthlyTotals[month] += Number(transaction.amount);
-
     });
+
+    const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
 
     monthlyChart = new Chart(canvas, {
 
@@ -888,15 +1370,35 @@ function renderMonthlyChart() {
 
         data: {
 
-            labels: Object.keys(monthlyTotals),
+            labels: months,
 
-            datasets: [{
+            datasets: [
 
-                label: "Expenses",
+                {
 
-                data: Object.values(monthlyTotals)
+                    label: "Income",
 
-            }]
+                    data: months.map(m => monthlyIncome[m] || 0),
+
+                    backgroundColor: "#10B981",
+
+                    borderRadius: 10
+
+                },
+
+                {
+
+                    label: "Expense",
+
+                    data: months.map(m => monthlyExpense[m] || 0),
+
+                    backgroundColor: "#EF4444",
+
+                    borderRadius: 10
+
+                }
+
+            ]
 
         },
 
@@ -904,7 +1406,35 @@ function renderMonthlyChart() {
 
             responsive: true,
 
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+
+            interaction: {
+
+                mode: "index",
+
+                intersect: false
+
+            },
+
+            plugins: {
+
+                legend: {
+
+                    position: "top"
+
+                }
+
+            },
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true
+
+                }
+
+            }
 
         }
 
@@ -923,6 +1453,8 @@ function updateCharts() {
     renderMonthlyChart();
 
 }
+
+
 // ==========================================
 // CHUNK 7
 // EXPORT + CLEAR DATA + LOGOUT
@@ -936,7 +1468,7 @@ if (exportBtn) {
 
         if (transactions.length === 0) {
 
-            alert("No transactions to export.");
+            showToast("No transactions available to export.");
 
             return;
 
@@ -1016,13 +1548,13 @@ if (clearDataBtn) {
 
             await loadTransactions();
 
-            alert("All expenses deleted.");
+            showToast("🗑️ All transactions deleted.");
 
         } catch (error) {
 
             console.error(error);
 
-            alert("Unable to delete all expenses.");
+            showToast("❌ Unable to delete transactions.");
 
         }
 
@@ -1073,10 +1605,61 @@ if (cancelLogout) {
     });
 
 }
+
 // ==========================================
 // CHUNK 8
 // INITIALIZATION
 // ==========================================
+// ==========================================
+// DARK / LIGHT MODE
+// ==========================================
+
+const themeToggle = document.getElementById("themeToggle");
+const themeText = document.getElementById("themeText");
+
+// Apply saved theme
+const savedTheme = localStorage.getItem("theme");
+
+if (savedTheme === "dark") {
+
+    document.body.classList.add("dark");
+
+    if (themeToggle) themeToggle.textContent = "☀️";
+
+    if (themeText) themeText.textContent = "Light Mode";
+
+}
+
+// Toggle theme
+if (themeToggle) {
+
+    themeToggle.addEventListener("click", () => {
+
+        document.body.classList.toggle("dark");
+
+        const isDark = document.body.classList.contains("dark");
+
+        if (isDark) {
+
+            themeToggle.textContent = "☀️";
+
+            if (themeText) themeText.textContent = "Light Mode";
+
+            localStorage.setItem("theme", "dark");
+
+        } else {
+
+            themeToggle.textContent = "🌙";
+
+            if (themeText) themeText.textContent = "Dark Mode";
+
+            localStorage.setItem("theme", "light");
+
+        }
+
+    });
+
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -1084,6 +1667,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Load all transactions
     await loadTransactions();
+    
 
     // Show dashboard by default
     showSection("dashboard");
@@ -1094,3 +1678,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 });
+// ==========================
+// SAVE MONTHLY BUDGET
+// ==========================
+
+if (saveBudgetBtn) {
+
+    budgetInput.value =
+        localStorage.getItem("monthlyBudget") || 40000;
+
+    saveBudgetBtn.addEventListener("click", () => {
+
+        const value = Number(budgetInput.value);
+
+        if (value <= 0) {
+
+            alert("Please enter a valid budget.");
+
+            return;
+
+        }
+
+        localStorage.setItem("monthlyBudget", value);
+
+        document.getElementById("budgetLimit").textContent =
+            formatMoney(value);
+
+        updateSummaryCards();
+
+        alert("Monthly budget updated!");
+
+    });
+
+}

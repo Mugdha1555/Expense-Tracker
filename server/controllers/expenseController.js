@@ -4,16 +4,16 @@ const Expense = require("../models/Expense");
 
 const addExpense = async (req, res) => {
     try {
-        const { title, amount, category, date } = req.body;
+        const { title, amount, category, type, date } = req.body;
 
         const expense = await Expense.create({
-            user: req.user._id,
-            title,
-            amount,
-            category,
-            date,
-        });
-
+    user: req.user._id,
+    title,
+    amount,
+    category,
+    type,
+    date,
+});
         res.status(201).json(expense);
     } catch (error) {
         res.status(500).json({
@@ -61,6 +61,7 @@ const updateExpense = async (req, res) => {
         expense.title = req.body.title || expense.title;
         expense.amount = req.body.amount || expense.amount;
         expense.category = req.body.category || expense.category;
+        expense.type = req.body.type || expense.type;
         expense.date = req.body.date || expense.date;
 
         const updatedExpense = await expense.save();

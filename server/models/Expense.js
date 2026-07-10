@@ -24,6 +24,14 @@ const expenseSchema = new mongoose.Schema(
         required: true
     },
 
+    // NEW FIELD
+    type: {
+        type: String,
+        enum: ["income", "expense"],
+        default: "expense",
+        required: true
+    },
+
     date: {
         type: Date,
         required: true

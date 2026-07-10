@@ -102,6 +102,17 @@
             </ul>
 
         </div>
+        <div class="theme-container">
+
+    <button id="themeToggle" class="theme-toggle">
+
+        🌙
+
+    </button>
+
+    <span id="themeText">Dark Mode</span>
+
+</div>
 
         <div class="sidebar-footer">
 
@@ -221,6 +232,81 @@
                 </div>
 
             </section>
+            <!-- Budget Tracker -->
+
+<section class="budget-card">
+
+    <div class="budget-header">
+
+        <h3>🎯 Monthly Budget</h3>
+
+        <span id="budgetPercent">
+
+            0%
+
+        </span>
+
+    </div>
+
+    <div class="progress-bar">
+
+        <div
+            class="progress-fill"
+            id="budgetProgress">
+
+        </div>
+
+    </div>
+
+    <div class="budget-info">
+
+        <span id="budgetSpent">
+
+            ₹0
+
+        </span>
+
+        <span>
+
+            /
+
+        </span>
+
+        <span id="budgetLimit">
+
+            ₹40,000
+
+        </span>
+
+    </div>
+
+</section>
+            <!-- Financial Insights -->
+
+<section class="insights-card">
+
+    <h3>💡 Financial Insights</h3>
+
+    <ul id="insightsList">
+
+    </ul>
+
+</section>
+        <!-- Recent Activity -->
+
+<section class="activity-card">
+
+    <div class="section-header">
+
+        <h3>🕒 Recent Activity</h3>
+
+    </div>
+
+    <div id="activityTimeline">
+
+    </div>
+
+</section>
 
             <!-- FILTER BAR -->
 
@@ -412,6 +498,30 @@
             </div>
 
             <div class="settings-card">
+                <div class="budget-setting">
+
+    <label for="budgetInput">
+
+        Monthly Budget
+
+    </label>
+
+    <div class="budget-row">
+
+        <input
+            type="number"
+            id="budgetInput"
+            placeholder="Enter Monthly Budget">
+
+        <button id="saveBudgetBtn">
+
+            Save
+
+        </button>
+
+    </div>
+
+</div>
 
                 <button id="clearDataBtn">
 
@@ -615,6 +725,10 @@
 
     </div>
 
+</div>
+<!-- Toast Notification -->
+<div id="toast" class="toast">
+    <span id="toastMessage"></span>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
