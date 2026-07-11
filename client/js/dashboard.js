@@ -288,8 +288,8 @@ async function loadTransactions() {
 
     try {
 
-        const response = await fetch(
-            "http://localhost:5000/api/expenses",
+       const response = await fetch(
+    `${API_URL}/expenses`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -700,9 +700,9 @@ expenseForm.addEventListener("submit", async function (e) {
 
         if (editId) {
 
-            response = await fetch(
+           response = await fetch(
 
-                `http://localhost:5000/api/expenses/${editId}`,
+    `${API_URL}/expenses/${editId}`,
 
                 {
 
@@ -726,8 +726,7 @@ expenseForm.addEventListener("submit", async function (e) {
 
             response = await fetch(
 
-                "http://localhost:5000/api/expenses",
-
+    `${API_URL}/expenses`,
                 {
 
                     method: "POST",
@@ -785,10 +784,9 @@ async function deleteTransaction(id) {
 
     try {
 
-        const response = await fetch(
+       const response = await fetch(
 
-            `http://localhost:5000/api/expenses/${id}`,
-
+    `${API_URL}/expenses/${id}`,
             {
 
                 method: "DELETE",
@@ -1526,10 +1524,9 @@ if (clearDataBtn) {
 
             for (const transaction of transactions) {
 
-                await fetch(
+               await fetch(
 
-                    `http://localhost:5000/api/expenses/${transaction._id}`,
-
+    `${API_URL}/expenses/${transaction._id}`,
                     {
 
                         method: "DELETE",
